@@ -5,13 +5,17 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv").config();
 const cors = require("cors");
 const episodeMasterList = new EpisodeMasterClass();
+const serverless = require("serverless-http");
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get("/episode/:series/:episodeNumber", async (req, res) => {
+router = express.Router();
+
+router.get("/episode/:series/:episodeNumber", async (req, res) => {
     let episode = await episodeMasterList.getEpisode(
         episodeMasterList[req.params.series][req.params.episodeNumber]
     );
@@ -19,33 +23,33 @@ app.get("/episode/:series/:episodeNumber", async (req, res) => {
     res.json(episode);
 });
 
-app.get("/db", (req, res) => {
+router.get("/db", (req, res) => {
     res.json(episodeMasterList.db);
 });
 
-app.get("/dbz", (req, res) => {
+router.get("/dbz", (req, res) => {
     res.json(episodeMasterList.dbz);
 });
-app.get("/dbkai", (req, res) => {
+router.get("/dbkai", (req, res) => {
     res.json(episodeMasterList.dbkai);
 });
-app.get("/dbs", (req, res) => {
+router.get("/dbs", (req, res) => {
     res.json(episodeMasterList.dbs);
 });
 
-app.get("/dbgt", (req, res) => {
+router.get("/dbgt", (req, res) => {
     res.json(episodeMasterList.dbgt);
 });
 
-app.get("/movies", (req, res) => {
+router.get("/movies", (req, res) => {
     res.json(episodeMasterList.movies);
 });
 
-app.get("/movies/:series/", (req, res) => {
+router.get("/movies/:series/", (req, res) => {
     res.json(episodeMasterList.returnMoviesBySeries(req.params.series));
 });
 
-app.get("/movie/:series/:number", async (req, res) => {
+router.get("/movie/:series/:number", async (req, res) => {
     let result = await episodeMasterList.returnMovie(
         req.params.series,
         req.params.number
@@ -53,7 +57,7 @@ app.get("/movie/:series/:number", async (req, res) => {
     res.json(result);
 });
 
-app.post("/admin", (req, res) => {
+router.post("/admin", (req, res) => {
     if (req.body.token === process.env.TOKEN) {
         switch (req.body.action) {
             case "updateNonWorkingList":
@@ -97,15 +101,18 @@ app.post("/admin", (req, res) => {
     }
 });
 
-app.get("/streaminfo", (req, res) => {
+router.get("/streaminfo", (req, res) => {
     res.json(episodeMasterList.streamStatus);
 });
 
-app.get("/allInfo", (req, res) => {
+router.get("/allInfo", (req, res) => {
     res.json(episodeMasterList);
 });
 
-app.listen(3000, "0.0.0.0", () => {
-    console.log("Server running on port 3000");
+app.listen(3001, "0.0.0.0", () => {
+    console.log("Server running");
     episodeMasterList.startStream();
 });
+
+app.use("/.netlify/functions/api", router);
+module.exports.handler = serverless(app);
