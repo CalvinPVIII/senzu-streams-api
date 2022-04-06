@@ -1,5 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const SockProxyAgent = require("socks-proxy-agent");
+const httpsAgent = new SockProxyAgent("socks://127.0.0.1:9050");
 
 const {
     dragonBallSuper,
@@ -138,6 +140,7 @@ class EpisodeMasterClass {
             const video = await axios.get(
                 `https://vidstream.pro/info/${videoId}?domain=gogoanime.lol&skey=${key}`,
                 {
+                    httpsAgent,
                     mode: "cors",
                     headers: {
                         referer: iframe,
